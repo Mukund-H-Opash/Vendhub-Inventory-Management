@@ -1,41 +1,60 @@
-// src/app/(dashboard)/page.jsx
-import { createClient } from '@/lib/supabase/server';
+// src/app/dashboard/page.jsx
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-
-// Import the MUI components we need for the UI
+import Link from 'next/link';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
+import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 
 export default async function DashboardPage() {
-  const supabase = createClient();
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
 
-  // 1. Check for an active user session (no changes here)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  // 2. If the user is not logged in, redirect (no changes here)
   if (!user) {
     redirect('/login');
   }
 
-  // 3. NEW: Fetch data from the 'locations' table
   const { data: locations, error: locationsError } = await supabase
     .from('locations')
     .select('*');
-
-  // 4. Define the logout function as a Server Action (no changes here)
+    
+  // --- 1. ADD THIS LINE FOR DEBUGGING ---
+  console.log("Data being used to build links:", JSON.stringify(locations, null, 2));
+  
   const signOut = async () => {
     'use server';
-    const supabase = createClient();
+    const cookieStore = cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        {
+          cookies: {
+            get(name) { return cookieStore.get(name)?.value },
+            set(name, value, options) { cookieStore.set({ name, value, ...options }) },
+            remove(name, options) { cookieStore.set({ name, value: '', ...options }) },
+          },
+        }
+      )
     await supabase.auth.signOut();
     return redirect('/login');
   };
 
-  // 5. Render the page with the new data display
   return (
     <div>
       <header style={{ background: '#f7f7f7', borderBottom: '1px solid #ddd', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -49,40 +68,43 @@ export default async function DashboardPage() {
           </form>
         </div>
       </header>
-      
+
       <main style={{ padding: '1.5rem' }}>
         <Typography variant="h4" component="h2" gutterBottom>
           Location Overview
         </Typography>
         
-        {/* Check for errors during data fetching */}
         {locationsError && (
           <Alert severity="error">
             Error fetching locations: {locationsError.message}
           </Alert>
         )}
 
-        {/* If no error, display the locations */}
         {!locationsError && (
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 2, mt: 2 }}>
             {locations && locations.length > 0 ? (
-              locations.map((location) => (
-                <Card key={location.id} variant="outlined">
-                  <CardContent>
-                    <Typography variant="h6" component="div">
-                      {location.display_name || 'Unnamed Location'}
-                    </Typography>
-                    <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                      Site Code: {location.site_code}
-                    </Typography>
-                    <Typography variant="body2">
-                      Address: {location.address || 'Not specified'}
-                    </Typography>
-                  </CardContent>
-                </Card>
+              // --- 2. ADD .filter() HERE AS A PERMANENT FIX ---
+              locations.filter(location => location.id).map((location) => (
+                <Link key={location.id} href={`/dashboard/locations/${location.id}`} passHref style={{ textDecoration: 'none' }}>
+                  <Card variant="outlined" sx={{ height: '100%' }}>
+                    <CardActionArea sx={{ height: '100%' }}>
+                      <CardContent>
+                        <Typography variant="h6" component="div">
+                          {location.display_name || 'Unnamed Location'}
+                        </Typography>
+                        <Typography sx={{ mb: 1.5 }} color="text.secondary">
+                          Site Code: {location.site_code}
+                        </Typography>
+                        <Typography variant="body2">
+                          Address: {location.address || 'Not specified'}
+                        </Typography>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                </Link>
               ))
             ) : (
-              <p>No locations found. Add one in the Supabase table editor to get started.</p>
+              <p>No locations found.</p>
             )}
           </Box>
         )}
