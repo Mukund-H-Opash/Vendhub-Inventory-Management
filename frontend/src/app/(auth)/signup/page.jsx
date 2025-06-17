@@ -1,4 +1,4 @@
-// src/app/(auth)/login/page.jsx
+// src/app/(auth)/signup/page.jsx
 'use client';
 
 import * as React from 'react';
@@ -34,33 +34,40 @@ function Copyright(props) {
   );
 }
 
-export default function SignIn() {
+
+export default function SignUp() {
+  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
   const supabase = createClient();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError(''); // Clear previous errors
+    setMessage('');
+    setError('');
 
     const data = new FormData(event.currentTarget);
     const email = data.get('email');
     const password = data.get('password');
 
-    // Supabase login logic
-    const { error } = await supabase.auth.signInWithPassword({
+    // Supabase sign-up logic
+    const { error } = await supabase.auth.signUp({
       email,
       password,
+      // You can add options here if you want to redirect the user
+      // to a specific page after they confirm their email.
+      // options: {
+      //   emailRedirectTo: 'http://localhost:3000/login',
+      // },
     });
 
     if (error) {
       setError('Error: ' + error.message);
       return;
     }
-
-    // On successful login, redirect to the dashboard
-    router.push('/dashboard');
-    router.refresh();
+    
+    // On successful sign-up, show a confirmation message.
+    setMessage('Success! Please check your email to confirm your account.');
   };
 
   return (
@@ -78,59 +85,63 @@ export default function SignIn() {
           <LockOutlinedIcon />
         </Avatar>
         <Typography component="h1" variant="h5">
-          Sign in
+          Sign up
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            autoFocus
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-          />
-          {/* Display login error message if it exists */}
+        <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
+                autoComplete="email"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                autoComplete="new-password"
+              />
+            </Grid>
+          </Grid>
+          
+          {/* Display success or error messages */}
+          {message && (
+            <Alert severity="success" sx={{ mt: 2, width: '100%' }}>
+              {message}
+            </Alert>
+          )}
           {error && (
             <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
               {error}
             </Alert>
           )}
+
           <Button
             type="submit"
             fullWidth
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
           >
-            Sign In
+            Sign Up
           </Button>
-          <Grid container>
-            <Grid item xs>
-              <Link href="#" variant="body2">
-                Forgot password?
-              </Link>
-            </Grid>
-            
+          <Grid container justifyContent="flex-end">
             <Grid item>
-                <Link href="/signup" variant="body2">
-                    {"Don't have an account? Sign Up"}
-                </Link>
+              <Link href="/login" variant="body2">
+                Already have an account? Sign in
+              </Link>
             </Grid>
           </Grid>
         </Box>
       </Box>
-      <Copyright sx={{ mt: 8, mb: 4 }} />
+      <Copyright sx={{ mt: 5 }} />
     </Container>
   );
 }
