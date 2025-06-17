@@ -1,9 +1,8 @@
 // src/app/(dashboard)/page.jsx
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
-// Import the MUI components
+// Import the MUI components we need for the UI
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -11,61 +10,32 @@ import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 
 export default async function DashboardPage() {
-  // Define cookie store and create Supabase client right here
-  const cookieStore = cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get(name) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
+  const supabase = createClient();
 
-  // 1. Check for an active user session
+  // 1. Check for an active user session (no changes here)
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 2. If the user is not logged in, redirect
+  // 2. If the user is not logged in, redirect (no changes here)
   if (!user) {
     redirect('/login');
   }
 
-  // 3. Fetch data from the 'locations' table
+  // 3. NEW: Fetch data from the 'locations' table
   const { data: locations, error: locationsError } = await supabase
     .from('locations')
     .select('*');
 
-  // 4. Define the logout function as a Server Action
+  // 4. Define the logout function as a Server Action (no changes here)
   const signOut = async () => {
     'use server';
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        {
-          cookies: {
-            get(name) {
-              return cookieStore.get(name)?.value
-            },
-            set(name, value, options) {
-              cookieStore.set({ name, value, ...options })
-            },
-            remove(name, options) {
-              cookieStore.set({ name, value: '', ...options })
-            },
-          },
-        }
-      )
+    const supabase = createClient();
     await supabase.auth.signOut();
     return redirect('/login');
   };
 
-  // 5. Render the page
+  // 5. Render the page with the new data display
   return (
     <div>
       <header style={{ background: '#f7f7f7', borderBottom: '1px solid #ddd', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -85,12 +55,14 @@ export default async function DashboardPage() {
           Location Overview
         </Typography>
         
+        {/* Check for errors during data fetching */}
         {locationsError && (
           <Alert severity="error">
             Error fetching locations: {locationsError.message}
           </Alert>
         )}
 
+        {/* If no error, display the locations */}
         {!locationsError && (
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 2, mt: 2 }}>
             {locations && locations.length > 0 ? (
