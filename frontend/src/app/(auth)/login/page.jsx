@@ -5,10 +5,12 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { Toaster, toast } from 'react-hot-toast';
 
 // MUI Components
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress'; // Import CircularProgress
 import CssBaseline from '@mui/material/CssBaseline';
 import TextField from '@mui/material/TextField';
 import Link from '@mui/material/Link';
@@ -35,32 +37,33 @@ function Copyright(props) {
 }
 
 export default function SignIn() {
-  const [error, setError] = useState('');
   const router = useRouter();
   const supabase = createClient();
+  const [loading, setLoading] = useState(false); // Add loading state
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError(''); // Clear previous errors
+    setLoading(true); // Set loading to true when login starts
 
     const data = new FormData(event.currentTarget);
     const email = data.get('email');
     const password = data.get('password');
 
-    // Supabase login logic
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      setError('Error: ' + error.message);
+      toast.error('Error: ' + error.message);
+      setLoading(false); // Set loading to false on error
       return;
     }
 
-    // On successful login, redirect to the dashboard
     router.push('/dashboard');
     router.refresh();
+    toast.success('Successfully logged in!');
+    setLoading(false); // Set loading to false on successful login
   };
 
   return (
@@ -90,6 +93,7 @@ export default function SignIn() {
             name="email"
             autoComplete="email"
             autoFocus
+            disabled={loading} // Disable input when loading
           />
           <TextField
             margin="normal"
@@ -100,20 +104,16 @@ export default function SignIn() {
             type="password"
             id="password"
             autoComplete="current-password"
+            disabled={loading} // Disable input when loading
           />
-          {/* Display login error message if it exists */}
-          {error && (
-            <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
-              {error}
-            </Alert>
-          )}
           <Button
             type="submit"
             fullWidth
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
+            disabled={loading} // Disable button when loading
           >
-            Sign In
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'} {/* Show loader or text */}
           </Button>
           <Grid container>
             <Grid item xs>
@@ -131,6 +131,7 @@ export default function SignIn() {
         </Box>
       </Box>
       <Copyright sx={{ mt: 8, mb: 4 }} />
+      <Toaster />
     </Container>
   );
 }

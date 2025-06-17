@@ -5,6 +5,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { Toaster, toast } from 'react-hot-toast';
 
 // MUI Components
 import Avatar from '@mui/material/Avatar';
@@ -36,15 +37,11 @@ function Copyright(props) {
 
 
 export default function SignUp() {
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
   const router = useRouter();
   const supabase = createClient();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setMessage('');
-    setError('');
 
     const data = new FormData(event.currentTarget);
     const email = data.get('email');
@@ -62,12 +59,17 @@ export default function SignUp() {
     });
 
     if (error) {
-      setError('Error: ' + error.message);
+      if (error.message.includes('User already registered')) {
+        toast.error('Error: This email is already registered. Please try logging in or use a different email.');
+      } else {
+        toast.error('Error: ' + error.message);
+      }
       return;
     }
     
     // On successful sign-up, show a confirmation message.
-    setMessage('Success! Please check your email to confirm your account.');
+    toast.success('Success! Please check your email to confirm your account.'); // Use toast.success for success messages
+    router.push('/login'); // Redirect to login page after successful signup
   };
 
   return (
@@ -113,7 +115,7 @@ export default function SignUp() {
           </Grid>
           
           {/* Display success or error messages */}
-          {message && (
+          {/* {message && (
             <Alert severity="success" sx={{ mt: 2, width: '100%' }}>
               {message}
             </Alert>
@@ -122,7 +124,7 @@ export default function SignUp() {
             <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
               {error}
             </Alert>
-          )}
+          )} */}
 
           <Button
             type="submit"
@@ -142,6 +144,7 @@ export default function SignUp() {
         </Box>
       </Box>
       <Copyright sx={{ mt: 5 }} />
+      <Toaster /> {/* Add the Toaster component here */}
     </Container>
   );
 }
