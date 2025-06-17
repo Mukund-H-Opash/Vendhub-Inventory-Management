@@ -1,89 +1,89 @@
-// src/app/(auth)/login/page.jsx
-'use client';
-
-import * as React from 'react';
+"use client";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Toaster, toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import {
+  Container, Box, TextField, Button, Typography, Paper, CircularProgress, Link as MuiLink
+} from '@mui/material';
+import Link from 'next/link';
 
-// MUI Components
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress'; // Import CircularProgress
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import Link from '@mui/material/Link';
-import Grid from '@mui/material/Grid';
-import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import Alert from '@mui/material/Alert';
-
-
-// Copyright component for the bottom of the page
-function Copyright(props) {
-  return (
-    <Typography variant="body2" color="text.secondary" align="center" {...props}>
-      {'Copyright © '}
-      <Link color="inherit" href="#">
-        Vending Frontend
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
-
-export default function SignIn() {
+export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
-  const [loading, setLoading] = useState(false); // Add loading state
 
-  const handleSubmit = async (event) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const validateEmail = (email) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const signIn = async (event) => {
     event.preventDefault();
-    setLoading(true); // Set loading to true when login starts
 
-    const data = new FormData(event.currentTarget);
-    const email = data.get('email');
-    const password = data.get('password');
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      toast.error('Error: ' + error.message);
-      setLoading(false); // Set loading to false on error
+    if (!trimmedEmail || !trimmedPassword) {
+      toast.error('Email and password are required.');
       return;
     }
 
-    router.push('/dashboard');
-    router.refresh();
-    toast.success('Successfully logged in!');
-    setLoading(false); // Set loading to false on successful login
+    if (!validateEmail(trimmedEmail)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password: trimmedPassword,
+      });
+
+      if (error) {
+        const msg = error.message.toLowerCase();
+
+        if (msg.includes("invalid login credentials")) {
+          toast.error("Incorrect email or password.");
+        } else if (msg.includes("email not confirmed")) {
+          toast.error("Please verify your email before logging in.");
+        } else if (msg.includes("user is not allowed")) {
+          toast.error("Your account has been disabled. Contact support.");
+        } else {
+          toast.error(`Login failed: ${error.message}`);
+        }
+      } else {
+        toast.success('Logged in successfully!');
+        router.push('/dashboard');
+        router.refresh();
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Container component="main" maxWidth="xs">
-      <CssBaseline />
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-          <LockOutlinedIcon />
-        </Avatar>
-        <Typography component="h1" variant="h5">
-          Sign in
+      <Paper elevation={6} sx={{
+        mt: 8,
+        p: 4,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        borderRadius: 2
+      }}>
+        <Typography component="h1" variant="h4" sx={{ mb: 1 }}>
+          VendHub
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+        <Typography component="h2" variant="h6" color="text.secondary">
+          Sign In
+        </Typography>
+        <Box component="form" onSubmit={signIn} sx={{ mt: 1, width: '100%' }}>
           <TextField
             margin="normal"
             required
@@ -93,7 +93,9 @@ export default function SignIn() {
             name="email"
             autoComplete="email"
             autoFocus
-            disabled={loading} // Disable input when loading
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
           />
           <TextField
             margin="normal"
@@ -104,34 +106,26 @@ export default function SignIn() {
             type="password"
             id="password"
             autoComplete="current-password"
-            disabled={loading} // Disable input when loading
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
           />
           <Button
             type="submit"
             fullWidth
             variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-            disabled={loading} // Disable button when loading
+            sx={{ mt: 3, mb: 2, py: 1.5 }}
+            disabled={loading}
           >
-            {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'} {/* Show loader or text */}
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
           </Button>
-          <Grid container>
-            {/* <Grid item xs>
-              <Link href="#" variant="body2">
-                Forgot password?
-              </Link>
-            </Grid> */}
-            
-            <Grid item>
-                <Link href="/signup" variant="body2" sx={{textDecoration: 'none', display: 'block'}}>
-                    {"Don't have an account? Sign Up"}
-                </Link>
-            </Grid>
-          </Grid>
+          <Box textAlign="center">
+            <MuiLink component={Link} href="/signup" variant="body2">
+              {"Don't have an account? Sign Up"}
+            </MuiLink>
+          </Box>
         </Box>
-      </Box>
-      <Copyright sx={{ mt: 8, mb: 4 }} />
-      <Toaster />
+      </Paper>
     </Container>
   );
 }
