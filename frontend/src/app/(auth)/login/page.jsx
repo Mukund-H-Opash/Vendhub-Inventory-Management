@@ -116,14 +116,14 @@ export default function SignIn() {
             {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'} {/* Show loader or text */}
           </Button>
           <Grid container>
-            <Grid item xs>
+            {/* <Grid item xs>
               <Link href="#" variant="body2">
                 Forgot password?
               </Link>
-            </Grid>
+            </Grid> */}
             
             <Grid item>
-                <Link href="/signup" variant="body2">
+                <Link href="/signup" variant="body2" sx={{textDecoration: 'none', display: 'block'}}>
                     {"Don't have an account? Sign Up"}
                 </Link>
             </Grid>
