@@ -11,7 +11,7 @@ import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 
 export default async function DashboardPage() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies(); 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -34,8 +34,6 @@ export default async function DashboardPage() {
     .from('locations')
     .select('*');
     
-  // --- 1. ADD THIS LINE FOR DEBUGGING ---
-  console.log("Data being used to build links:", JSON.stringify(locations, null, 2));
   
   const signOut = async () => {
     'use server';
