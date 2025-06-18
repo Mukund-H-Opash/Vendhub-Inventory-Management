@@ -2,8 +2,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export function createClient() {
-  const cookieStore = cookies() // No 'await' here
+export async function createClient() {
+  const cookieStore =  await cookies() 
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -17,14 +17,14 @@ export function createClient() {
           try {
             cookieStore.set({ name, value, ...options })
           } catch (error) {
-            // This can be ignored if you have middleware refreshing sessions
+            // optional: ignore if middleware handles this
           }
         },
         remove(name, options) {
           try {
             cookieStore.set({ name, value: '', ...options })
           } catch (error) {
-            // This can be ignored if you have middleware refreshing sessions
+            // optional: ignore if middleware handles this
           }
         },
       },

@@ -17,9 +17,7 @@ export default async function LocationDetailPage({ params }) {
   let sales = [];
   let error = null;
 
-  // --- THIS IS THE FIX ---
-  // We get the site_code directly from the URL params, which now works
-  // because you renamed the folder to [site_code].
+
   const siteCode = params.site_code;
 
   try {
