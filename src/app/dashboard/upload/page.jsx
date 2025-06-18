@@ -2,8 +2,7 @@
 
 import { Typography, Box, Paper } from '@mui/material';
 import UploadForm from '@/components/dashboard/UploadForm';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+
 
 export default function UploadPage() {
   return (
@@ -17,7 +16,7 @@ export default function UploadPage() {
         px: 2,
       }}
     >
-      <ToastContainer />
+      
 
       <Paper
         elevation={6}

@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Button, Input, Box, CircularProgress, Alert, Typography } from '@mui/material';
 import { UploadFile } from '@mui/icons-material';
-import { processCsvFile } from '@/lib/actions'; 
+import { processCsvFile } from '@/app/actions';
 import toast from 'react-hot-toast';
 
 export default function UploadForm() {

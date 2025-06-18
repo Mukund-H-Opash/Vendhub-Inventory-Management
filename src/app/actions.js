@@ -1,4 +1,4 @@
-// src/app/actions.js
+// src/actions.js
 "use server";
 
 import { createClient } from '@/lib/supabase/server';
