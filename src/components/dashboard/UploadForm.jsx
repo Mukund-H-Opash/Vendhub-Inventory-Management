@@ -6,6 +6,7 @@ import { Button, Input, Box, CircularProgress, Alert, Typography } from '@mui/ma
 import { UploadFile } from '@mui/icons-material';
 import { processCsvFile } from '@/app/actions'; 
 import toast from 'react-hot-toast';
+import Router from 'next/router';
 
 export default function UploadForm() {
     const [isSubmitting, setSubmitting] = useState(false);
@@ -47,9 +48,11 @@ export default function UploadForm() {
                 setError(displayError);
             } else {
                 // Handle a success response
-                const successMsg = `Processing complete! ${result.processedRows} rows were successfully saved.`;
+                const successMsg = `Processing complete!`;
                 toast.success(successMsg);
                 setSuccessMessage(successMsg);
+                // Redirect to locations page after successful processing
+                window.location.href = '/dashboard';
             }
         } catch (e) {
             const errorMessage = 'An unexpected error occurred during file processing.';
