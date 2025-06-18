@@ -1,6 +1,7 @@
 // src/app/layout.jsx
 import { ThemeProvider } from '@mui/material/styles';
 import theme from '../theme'; // We will create this file next
+import { Toaster } from 'react-hot-toast';
 
 export const metadata = {
   title: "Vending Frontend",
@@ -14,6 +15,7 @@ export default function RootLayout({ children }) {
           <ThemeProvider theme={theme}>
             {children}
           </ThemeProvider>
+          <Toaster />
       </body>
     </html>
   );
