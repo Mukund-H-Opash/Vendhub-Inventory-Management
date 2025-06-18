@@ -1,11 +1,10 @@
-// src/actions.js
+// src/app/actions.js
 "use server";
 
 import { createClient } from '@/lib/supabase/server';
 import Papa from 'papaparse';
 import { detectFormat, normalizeRow, aggregateSales } from '@/lib/data/normalization';
 
-// Helper function to read the file content as text
 async function fileToText(file) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -17,71 +16,74 @@ export async function processCsvFile(formData) {
     const csvFile = formData.get('csvFile');
 
     if (!csvFile || csvFile.size === 0) {
-        return { error: "No file provided or file is empty." };
+        return { error: "No file provided." };
     }
 
     const fileText = await fileToText(csvFile);
 
-    // 1. PARSE THE CSV
-    const parseResult = Papa.parse(fileText, {
-        header: true,
-        skipEmptyLines: true,
-    });
+    const parseResult = Papa.parse(fileText, { header: true, skipEmptyLines: true });
+    if (parseResult.errors.length > 0) return { error: `CSV Parsing Error: ${parseResult.errors[0].message}` };
 
-    if (parseResult.errors.length > 0) {
-        return { error: `CSV Parsing Error: ${parseResult.errors[0].message}` };
-    }
-    if (parseResult.data.length === 0) {
-        return { error: "CSV contains no data." };
-    }
-
-    // 2. DETECT FORMAT AND NORMALIZE DATA
-    const headers = parseResult.meta.fields;
-    const format = detectFormat(headers);
-
-    if (format === 'UNKNOWN') {
-        return { error: "Could not determine CSV format. Please check the file headers." };
-    }
+    const format = detectFormat(parseResult.meta.fields);
+    if (format === 'UNKNOWN') return { error: "Could not determine CSV format." };
 
     const normalizedData = parseResult.data.map(row => normalizeRow(row, format));
-
-    // 3. AGGREGATE SALES TO REDUCE DATABASE QUERIES
     const salesMap = aggregateSales(normalizedData);
-    if (salesMap.size === 0) {
-        return { error: "No valid sales data found to process." };
-    }
+    if (salesMap.size === 0) return { error: "No valid sales data found to process." };
 
-    // 4. UPDATE DATABASE RECORDS
+    // --- NEW: Detailed Feedback and Edge Case Handling ---
     let updatedRows = 0;
+    let skippedRows = 0;
     let errors = [];
 
-    // Begin transaction
     for (const [key, quantitySold] of salesMap.entries()) {
         const [site_code, upc] = key.split('|');
+        
+        // Edge Case 1: Check if the location exists
+        const { data: location } = await supabase.from('locations').select('id').eq('site_code', site_code).single();
+        if (!location) {
+            errors.push(`Location with Site Code '${site_code}' not found.`);
+            skippedRows++;
+            continue; // Skip to the next item
+        }
 
-        // Use an RPC function for the inventory update to handle the logic within the database.
-        // This is more efficient and secure.
-        const { error } = await supabase.rpc('update_inventory_from_sale', {
-            p_site_code: site_code,
-            p_upc: upc,
-            p_quantity_sold: quantitySold
-        });
+        // Edge Case 2: Check if the product exists
+        const { data: product } = await supabase.from('products').select('id').eq('upc', upc).single();
+        if (!product) {
+            errors.push(`Product with UPC '${upc}' not found.`);
+            skippedRows++;
+            continue; // Skip to the next item
+        }
 
-        if (error) {
-            console.error(`DB Error for ${key}:`, error.message);
-            errors.push(`Failed to update inventory for UPC ${upc} at location ${site_code}.`);
+        // Edge Case 3: Check if the inventory record exists (product is assigned to location)
+        const { data: inventoryItem, error: inventoryError } = await supabase
+            .from('inventory')
+            .select('id, stock_level')
+            .eq('location_id', location.id)
+            .eq('product_id', product.id)
+            .single();
+
+        if (!inventoryItem) {
+            errors.push(`Product '${upc}' is not in the inventory of location '${site_code}'.`);
+            skippedRows++;
+            continue;
+        }
+
+        // If all checks pass, update the stock level
+        const newStock = Math.max(0, inventoryItem.stock_level - quantitySold);
+        const { error: updateError } = await supabase
+            .from('inventory')
+            .update({ stock_level: newStock })
+            .eq('id', inventoryItem.id);
+
+        if (updateError) {
+            errors.push(`DB error for ${site_code}|${upc}: ${updateError.message}`);
+            skippedRows++;
         } else {
             updatedRows++;
         }
     }
-
-    if (errors.length > 0) {
-        // Return a partial success message if some rows were updated
-        const errorMessage = updatedRows > 0 
-            ? `Completed with ${errors.length} errors. ${errors[0]}`
-            : `Processing failed. ${errors[0]}`;
-        return { error: errorMessage, updatedRows };
-    }
-
-    return { updatedRows };
+    
+    // Return a detailed report object
+    return { updatedRows, skippedRows, errors };
 }

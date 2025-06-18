@@ -1,8 +1,6 @@
 // src/app/dashboard/locations/[id]/page.jsx
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-
 import {
   Typography,
   Alert,
@@ -10,124 +8,88 @@ import {
   Paper,
   Box,
   Divider,
-  Skeleton,
 } from '@mui/material';
-
-import InventoryTable from '@/components/dashboard/InventoryTable';
+import ProductListTable from '@/components/dashboard/ProductListTable';
 
 export default async function LocationDetailPage({ params }) {
-  const cookieStore = cookies();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        get(name) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
-
+  const supabase = createClient();
   let location = null;
-  let inventory = [];
+  let products = [];
   let error = null;
 
   try {
     const locationId = params?.id;
-
     if (!locationId) {
-      throw new Error("Invalid or missing location ID.");
+      throw new Error("Invalid location ID.");
     }
 
-    // Fetch location
+    // Step 1: Fetch the location's details to get its site_code
     const { data: locData, error: locError } = await supabase
       .from('locations')
-      .select('*')
+      .select('site_code, display_name, address')
       .eq('id', locationId)
       .single();
 
-    if (locError && locError.code === 'PGRST116') {
-      // Not found
-      throw new Error("Location not found.");
-    } else if (locError) {
+    if (locError) {
+      // Handle case where location is not found
+      if (locError.code === 'PGRST116') throw new Error("Location not found.");
       throw locError;
     }
-
     location = locData;
 
-    // Fetch inventory
-    const { data: invData, error: invError } = await supabase
-      .from('inventory')
-      .select(`
-        id,
-        stock_level,
-        products (
-          display_name,
-          upc,
-          unit_price
-        )
-      `)
-      .eq('location_id', locationId)
-      .order('stock_level', { ascending: false });
+    // Step 2: Call our new database function with the site_code
+    const { data: productsData, error: productsError } = await supabase
+      .rpc('get_unique_products_by_location', {
+        p_site_code: location.site_code
+      });
 
-    if (invError) {
-      throw invError;
+    if (productsError) {
+      throw productsError;
     }
+    products = productsData;
 
-    inventory = invData;
   } catch (err) {
     console.error('[LocationDetailPage Error]', err.message);
-    error = err;
+    error = { message: err.message };
   }
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: '1000px', mx: 'auto' }}>
-      {/* Back Button */}
       <Box sx={{ mb: 3 }}>
         <Link href="/dashboard" passHref>
           <Button variant="outlined">← Back to All Locations</Button>
         </Link>
       </Box>
 
-      {/* Error Message */}
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
-          {error.message || 'Something went wrong while loading the location data.'}
+          {error.message || 'An unexpected error occurred.'}
         </Alert>
       )}
 
-      {/* Location Info */}
-      {!error && location ? (
-        <Paper elevation={2} sx={{ p: 3, borderRadius: 3, mb: 4 }}>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
-            Inventory – {location.display_name}
-          </Typography>
-          <Divider sx={{ my: 2 }} />
-          <Typography variant="body1" color="text.secondary">
-            <strong>Site Code:</strong> {location.site_code}
-          </Typography>
-          {location.address && (
-            <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-              <strong>Address:</strong> {location.address}
+      {!error && location && (
+        <>
+          <Paper elevation={2} sx={{ p: 3, borderRadius: 3, mb: 4 }}>
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
+              Products at {location.display_name}
             </Typography>
-          )}
-        </Paper>
-      ) : null}
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="body1" color="text.secondary">
+              <strong>Site Code:</strong> {location.site_code}
+            </Typography>
+          </Paper>
 
-      {/* Inventory Table */}
-      {!error && location ? (
-        <Paper elevation={3} sx={{ p: 2, borderRadius: 3 }}>
-          {inventory?.length > 0 ? (
-            <InventoryTable initialInventory={inventory} />
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              No inventory available for this location.
-            </Typography>
-          )}
-        </Paper>
-      ) : null}
+          <Paper elevation={3} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+            {products?.length > 0 ? (
+              <ProductListTable products={products} />
+            ) : (
+              <Typography sx={{ p: 3, textAlign: 'center' }} color="text.secondary">
+                No sales have been recorded for this location yet.
+              </Typography>
+            )}
+          </Paper>
+        </>
+      )}
     </Box>
   );
 }
