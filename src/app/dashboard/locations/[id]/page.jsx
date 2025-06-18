@@ -9,12 +9,12 @@ import {
   Box,
   Divider,
 } from '@mui/material';
-import ProductListTable from '@/components/dashboard/ProductListTable';
+import ProductSalesTable from '@/components/dashboard/ProductSalesTable'; // We will create this new component
 
 export default async function LocationDetailPage({ params }) {
   const supabase = createClient();
   let location = null;
-  let products = [];
+  let sales = [];
   let error = null;
 
   try {
@@ -26,27 +26,27 @@ export default async function LocationDetailPage({ params }) {
     // Step 1: Fetch the location's details to get its site_code
     const { data: locData, error: locError } = await supabase
       .from('locations')
-      .select('site_code, display_name, address')
+      .select('site_code, display_name')
       .eq('id', locationId)
       .single();
 
     if (locError) {
-      // Handle case where location is not found
       if (locError.code === 'PGRST116') throw new Error("Location not found.");
       throw locError;
     }
     location = locData;
 
-    // Step 2: Call our new database function with the site_code
-    const { data: productsData, error: productsError } = await supabase
-      .rpc('get_unique_products_by_location', {
-        p_site_code: location.site_code
-      });
+    // Step 2: Fetch ALL sales records from the 'products' table for this location
+    const { data: salesData, error: salesError } = await supabase
+      .from('products')
+      .select('*') // Select all columns
+      .eq('site_code', location.site_code)
+      .order('sale_date', { ascending: false }); // Show most recent sales first
 
-    if (productsError) {
-      throw productsError;
+    if (salesError) {
+      throw salesError;
     }
-    products = productsData;
+    sales = salesData;
 
   } catch (err) {
     console.error('[LocationDetailPage Error]', err.message);
@@ -54,7 +54,7 @@ export default async function LocationDetailPage({ params }) {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: '1000px', mx: 'auto' }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: '1200px', mx: 'auto' }}>
       <Box sx={{ mb: 3 }}>
         <Link href="/dashboard" passHref>
           <Button variant="outlined">← Back to All Locations</Button>
@@ -71,7 +71,7 @@ export default async function LocationDetailPage({ params }) {
         <>
           <Paper elevation={2} sx={{ p: 3, borderRadius: 3, mb: 4 }}>
             <Typography variant="h4" fontWeight="bold" gutterBottom>
-              Products at {location.display_name}
+              Sales History for {location.display_name}
             </Typography>
             <Divider sx={{ my: 2 }} />
             <Typography variant="body1" color="text.secondary">
@@ -80,8 +80,9 @@ export default async function LocationDetailPage({ params }) {
           </Paper>
 
           <Paper elevation={3} sx={{ borderRadius: 3, overflow: 'hidden' }}>
-            {products?.length > 0 ? (
-              <ProductListTable products={products} />
+            {sales?.length > 0 ? (
+              // Step 3: Render the new component with the full sales data
+              <ProductSalesTable salesData={sales} />
             ) : (
               <Typography sx={{ p: 3, textAlign: 'center' }} color="text.secondary">
                 No sales have been recorded for this location yet.
