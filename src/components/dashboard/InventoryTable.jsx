@@ -1,4 +1,3 @@
-// src/components/dashboard/InventoryTable.jsx
 "use client";
 
 import { useState } from 'react';
@@ -25,9 +24,10 @@ export default function InventoryTable({ initialInventory = [] }) {
     const router = useRouter();
     const supabase = createClient();
 
+    const [localInventory, setLocalInventory] = useState(initialInventory); // 🟡 NEW
     const [editingRowId, setEditingRowId] = useState(null);
     const [stockValue, setStockValue] = useState('');
-    const [isSubmitting, setSubmitting] = useState(false);
+    const [savingRowId, setSavingRowId] = useState(null);
 
     // --- EDIT LOGIC ---
     const handleEditClick = (item) => {
@@ -46,20 +46,31 @@ export default function InventoryTable({ initialInventory = [] }) {
             return;
         }
 
-        setSubmitting(true);
+        const newStock = parseInt(stockValue, 10);
+        setSavingRowId(inventoryId);
+
         const { error } = await supabase
             .from('inventory')
-            .update({ stock_level: parseInt(stockValue, 10) })
+            .update({ stock_level: newStock })
             .eq('id', inventoryId);
 
         if (error) {
             toast.error(`Error updating stock: ${error.message}`);
         } else {
             toast.success("Stock level updated!");
+
+            // 🟢 Instant UI update: Optimistically update localInventory
+            const updatedInventory = localInventory.map(item =>
+                item.id === inventoryId ? { ...item, stock_level: newStock } : item
+            );
+            setLocalInventory(updatedInventory);
+
             setEditingRowId(null);
-            router.refresh(); // Refresh data from the server
+            setStockValue('');
+            router.refresh(); // still sync data in background
         }
-        setSubmitting(false);
+
+        setSavingRowId(null);
     };
 
     // --- DELETE LOGIC ---
@@ -74,7 +85,7 @@ export default function InventoryTable({ initialInventory = [] }) {
                 toast.error(`Error deleting item: ${error.message}`);
             } else {
                 toast.success("Item removed from inventory.");
-                router.refresh(); // Refresh data from the server
+                router.refresh();
             }
         }
     };
@@ -92,51 +103,59 @@ export default function InventoryTable({ initialInventory = [] }) {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {initialInventory.length > 0 ? (
-                        initialInventory.map((item) => {
+                    {localInventory.length > 0 ? (
+                        localInventory.map((item) => {
                             const isEditing = editingRowId === item.id;
+                            const isSaving = savingRowId === item.id;
+
                             return (
-                                <TableRow key={item.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                <TableRow key={item.id}>
                                     <TableCell>{item.products.display_name}</TableCell>
                                     <TableCell>{item.products.upc}</TableCell>
                                     <TableCell align="right">${item.products.unit_price}</TableCell>
                                     <TableCell align="center">
                                         {isEditing ? (
-                                            <TextField
-                                                size="small"
-                                                type="number"
-                                                value={stockValue}
-                                                onChange={(e) => setStockValue(e.target.value)}
-                                                variant="outlined"
-                                                sx={{ width: '80px' }}
-                                                autoFocus
-                                            />
+                                            isSaving ? (
+                                                <CircularProgress size={20} />
+                                            ) : (
+                                                <TextField
+                                                    size="small"
+                                                    type="number"
+                                                    value={stockValue}
+                                                    onChange={(e) => setStockValue(e.target.value)}
+                                                    variant="outlined"
+                                                    sx={{ width: '80px' }}
+                                                    autoFocus
+                                                />
+                                            )
+                                        ) : isSaving ? (
+                                            <CircularProgress size={20} />
                                         ) : (
                                             <Typography fontWeight="bold">{item.stock_level}</Typography>
                                         )}
                                     </TableCell>
                                     <TableCell align="center">
-                                        {isSubmitting && isEditing ? <CircularProgress size={24} /> : (
+                                        {isEditing ? (
+                                            isSaving ? (
+                                                <CircularProgress size={24} />
+                                            ) : (
+                                                <Box>
+                                                    <IconButton color="primary" onClick={() => handleSaveClick(item.id)} aria-label="save">
+                                                        <Save />
+                                                    </IconButton>
+                                                    <IconButton onClick={handleCancelClick} aria-label="cancel">
+                                                        <Cancel />
+                                                    </IconButton>
+                                                </Box>
+                                            )
+                                        ) : (
                                             <Box>
-                                                {isEditing ? (
-                                                    <>
-                                                        <IconButton color="primary" onClick={() => handleSaveClick(item.id)} aria-label="save">
-                                                            <Save />
-                                                        </IconButton>
-                                                        <IconButton onClick={handleCancelClick} aria-label="cancel">
-                                                            <Cancel />
-                                                        </IconButton>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <IconButton color="primary" onClick={() => handleEditClick(item)} aria-label="edit">
-                                                            <Edit />
-                                                        </IconButton>
-                                                        <IconButton color="error" onClick={() => handleDeleteClick(item.id)} aria-label="delete">
-                                                            <Delete />
-                                                        </IconButton>
-                                                    </>
-                                                )}
+                                                <IconButton color="primary" onClick={() => handleEditClick(item)} aria-label="edit">
+                                                    <Edit />
+                                                </IconButton>
+                                                <IconButton color="error" onClick={() => handleDeleteClick(item.id)} aria-label="delete">
+                                                    <Delete />
+                                                </IconButton>
                                             </Box>
                                         )}
                                     </TableCell>
