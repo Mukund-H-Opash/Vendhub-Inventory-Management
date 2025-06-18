@@ -1,4 +1,4 @@
-// src/app/dashboard/locations/[id]/page.jsx
+// src/app/dashboard/locations/[site_code]/page.jsx
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import {
@@ -9,38 +9,31 @@ import {
   Box,
   Divider,
 } from '@mui/material';
-import ProductSalesTable from '@/components/dashboard/ProductSalesTable'; // We will create this new component
+// Ensure you have this component created at the path below
+import ProductSalesTable from '@/components/dashboard/ProductSalesTable'; 
 
 export default async function LocationDetailPage({ params }) {
   const supabase = createClient();
-  let location = null;
   let sales = [];
   let error = null;
 
+  // --- THIS IS THE FIX ---
+  // We get the site_code directly from the URL params, which now works
+  // because you renamed the folder to [site_code].
+  const siteCode = params.site_code;
+
   try {
-    const locationId = params?.id;
-    if (!locationId) {
-      throw new Error("Invalid location ID.");
+    if (!siteCode) {
+      // This error will no longer happen if the folder is named correctly
+      throw new Error("Invalid or missing location site code.");
     }
 
-    // Step 1: Fetch the location's details to get its site_code
-    const { data: locData, error: locError } = await supabase
-      .from('locations')
-      .select('site_code, display_name')
-      .eq('id', locationId)
-      .single();
-
-    if (locError) {
-      if (locError.code === 'PGRST116') throw new Error("Location not found.");
-      throw locError;
-    }
-    location = locData;
-
-    // Step 2: Fetch ALL sales records from the 'products' table for this location
+    // We no longer need to fetch from the 'locations' table first.
+    // We can directly query the 'products' table with the site_code.
     const { data: salesData, error: salesError } = await supabase
       .from('products')
-      .select('*') // Select all columns
-      .eq('site_code', location.site_code)
+      .select('*') // Select all columns from the sales transaction
+      .eq('site_code', siteCode)
       .order('sale_date', { ascending: false }); // Show most recent sales first
 
     if (salesError) {
@@ -49,7 +42,7 @@ export default async function LocationDetailPage({ params }) {
     sales = salesData;
 
   } catch (err) {
-    console.error('[LocationDetailPage Error]', err.message);
+    console.error(`[LocationDetailPage Error for ${siteCode}]`, err.message);
     error = { message: err.message };
   }
 
@@ -67,21 +60,20 @@ export default async function LocationDetailPage({ params }) {
         </Alert>
       )}
 
-      {!error && location && (
+      {!error && (
         <>
           <Paper elevation={2} sx={{ p: 3, borderRadius: 3, mb: 4 }}>
             <Typography variant="h4" fontWeight="bold" gutterBottom>
-              Sales History for {location.display_name}
+              Sales History for Location
             </Typography>
             <Divider sx={{ my: 2 }} />
-            <Typography variant="body1" color="text.secondary">
-              <strong>Site Code:</strong> {location.site_code}
+            <Typography variant="h5" color="text.secondary">
+              Site Code: <strong>{siteCode}</strong>
             </Typography>
           </Paper>
 
           <Paper elevation={3} sx={{ borderRadius: 3, overflow: 'hidden' }}>
             {sales?.length > 0 ? (
-              // Step 3: Render the new component with the full sales data
               <ProductSalesTable salesData={sales} />
             ) : (
               <Typography sx={{ p: 3, textAlign: 'center' }} color="text.secondary">
