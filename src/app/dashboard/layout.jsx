@@ -1,10 +1,8 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import "@/app/globals.css"
 
 export default function DashboardLayout({ children }) {
-  // This simple layout provides a consistent container for all dashboard pages.
-  // For a full sidebar/header, we would create those as separate components.
-  // For now, let's create a clean, contained main area.
   return (
     <Box sx={{ display: 'flex' }}>
       {/* A placeholder for a future sidebar */}
@@ -13,7 +11,7 @@ export default function DashboardLayout({ children }) {
         component="main"
         sx={{
           flexGrow: 1,
-          p: { xs: 2, sm: 3 }, // Responsive padding
+          p: 0, // Changed from { xs: 2, sm: 3 } to 0 to remove padding
           backgroundColor: 'background.default',
           minHeight: '100vh',
         }}

@@ -80,7 +80,7 @@ export default async function DashboardPage() {
           Vending Dashboard
         </Typography>
         <Box display="flex" alignItems="center" gap={2}>
-          <Typography variant="body1">{user.email}</Typography>
+          <Typography variant="body1" sx={{color: "black"}}>{user.email}</Typography>
           <form action={signOut}>
             <Button variant="contained" color="error" type="submit">
               Logout
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
         </Box>
       </Box>
 
-      {/* Main Content */}
+      {/* Main Content */}  
       <Box sx={{ px: 4, py: 5 }}>
         <Box
           sx={{
@@ -99,7 +99,7 @@ export default async function DashboardPage() {
             mb: 4,
           }}
         >
-          <Typography variant="h4" fontWeight={600}>
+          <Typography variant="h4" fontWeight={600} sx={{color: "black"}}>
             Vending Machine Locations
           </Typography>
           <Link href="/dashboard/upload" passHref>
