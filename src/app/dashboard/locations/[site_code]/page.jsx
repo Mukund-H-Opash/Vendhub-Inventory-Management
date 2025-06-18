@@ -13,7 +13,8 @@ import {
 import ProductSalesTable from '@/components/dashboard/ProductSalesTable'; 
 
 export default async function LocationDetailPage({ params }) {
-  const supabase = createClient();
+  // FIX: Added 'await' to correctly initialize the Supabase client.
+  const supabase = await createClient();
   let sales = [];
   let error = null;
 
