@@ -37,7 +37,8 @@ export default async function DashboardPage() {
 
   const signOut = async () => {
     "use server";
-    const supabase = createClient();
+    // FIX: Added 'await' to correctly get the Supabase client
+    const supabase = await createClient();
     await supabase.auth.signOut();
     // After signing out, redirect to the login page
     return redirect("/login");
