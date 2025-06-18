@@ -70,64 +70,87 @@ export default function SignupPage() {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Paper elevation={6} sx={{
-        mt: 8,
-        p: 4,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        borderRadius: 2
-      }}>
-        <Typography component="h1" variant="h4" sx={{ mb: 1 }}>
-          VendHub
-        </Typography>
-        <Typography component="h2" variant="h6" color="text.secondary">
-          Create Account
-        </Typography>
-        <Box component="form" onSubmit={signUp} sx={{ mt: 1, width: '100%' }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            autoFocus
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2, py: 1.5 }}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
-          </Button>
-          <Box textAlign="center">
-            <MuiLink component={Link} href="/login" variant="body2">
-              {"Already have an account? Sign In"}
-            </MuiLink>
+    <Box sx={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(120deg, #f6f7f9 0%, #e3eeff 100%)' // Dashboard background
+    }}>
+      <Container component="main" maxWidth="xs">
+        <Paper elevation={6} sx={{
+          // mt: 8, // Remove this line
+          p: 4,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          borderRadius: 3, // Matching dashboard card radius
+          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)', // Matching dashboard card background
+          boxShadow: '0 8px 20px rgba(0,0,0,0.1)', // Matching dashboard card shadow
+        }}>
+          <Typography component="h1" variant="h4" sx={{
+            mb: 1,
+            background: 'linear-gradient(45deg, #2c3e50 0%, #3498db 100%)', // Dashboard heading gradient
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>
+            VendHub
+          </Typography>
+          <Typography component="h2" variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+            Create Account
+          </Typography>
+          <Box component="form" onSubmit={signUp} sx={{ mt: 1, width: '100%' }}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              autoFocus
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+            />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{
+                mt: 3,
+                mb: 2,
+                py: 1.5,
+                background: 'linear-gradient(45deg, #2ecc71 0%, #27ae60 100%)', // Dashboard button gradient
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #27ae60 0%, #2ecc71 100%)', // Dashboard button hover effect
+                }
+              }}
+              disabled={loading}
+            >
+              {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
+            </Button>
+            <Box textAlign="center">
+              <MuiLink component={Link} href="/login" variant="body2" sx={{ color: '#3498db' }}>
+                {"Already have an account? Sign In"}
+              </MuiLink>
+            </Box>
           </Box>
-        </Box>
-      </Paper>
-    </Container>
+        </Paper>
+      </Container>
+    </Box>
   );
 }
