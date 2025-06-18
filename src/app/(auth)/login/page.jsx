@@ -26,7 +26,7 @@ export default function LoginPage() {
     const trimmedPassword = password.trim();
 
     if (!trimmedEmail || !trimmedPassword) {
-      toast.error('Email and password are required.');
+      toast.error('Email and password fields cannot be empty.');
       return;
     }
 
@@ -35,33 +35,30 @@ export default function LoginPage() {
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
-      const { error, data } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: trimmedEmail,
         password: trimmedPassword,
       });
 
       if (error) {
-        const msg = error.message.toLowerCase();
-
-        if (msg.includes("invalid login credentials")) {
-          toast.error("Incorrect email or password.");
-        } else if (msg.includes("email not confirmed")) {
-          toast.error("Please verify your email before logging in.");
-        } else if (msg.includes("user is not allowed")) {
-          toast.error("Your account has been disabled. Contact support.");
+        // More specific error toasts
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error('Incorrect email or password. Please try again.');
+        } else if (error.message.includes('Email not confirmed')) {
+          toast.error('Your email is not verified. Please check your inbox for a verification link.');
         } else {
-          toast.error(`Login failed: ${error.message}`);
+          toast.error(error.message);
         }
       } else {
-        toast.success('Logged in successfully!');
+        toast.success('Login successful!');
         router.push('/dashboard');
-        router.refresh();
+        router.refresh(); // Refresh server-side props
       }
     } catch (err) {
-      console.error(err);
-      toast.error("Something went wrong. Please try again later.");
+      console.error('Login error:', err);
+      toast.error('An unexpected error occurred. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -74,22 +71,21 @@ export default function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(120deg, #f6f7f9 0%, #e3eeff 100%)' // Dashboard background
+      background: 'linear-gradient(120deg, #f6f7f9 0%, #e3eeff 100%)'
     }}>
       <Container component="main" maxWidth="xs">
         <Paper elevation={6} sx={{
-          // mt: 8, // Remove this line
           p: 4,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          borderRadius: 3, // Matching dashboard card radius
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)', // Matching dashboard card background
-          boxShadow: '0 8px 20px rgba(0,0,0,0.1)', // Matching dashboard card shadow
+          borderRadius: 3,
+          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+          boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
         }}>
           <Typography component="h1" variant="h4" sx={{
             mb: 1,
-            background: 'linear-gradient(45deg, #2c3e50 0%, #3498db 100%)', // Dashboard heading gradient
+            background: 'linear-gradient(45deg, #2c3e50 0%, #3498db 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
@@ -133,9 +129,9 @@ export default function LoginPage() {
                 mt: 3,
                 mb: 2,
                 py: 1.5,
-                background: 'linear-gradient(45deg, #2ecc71 0%, #27ae60 100%)', // Dashboard button gradient
+                background: 'linear-gradient(45deg, #2ecc71 0%, #27ae60 100%)',
                 '&:hover': {
-                  background: 'linear-gradient(45deg, #27ae60 0%, #2ecc71 100%)', // Dashboard button hover effect
+                  background: 'linear-gradient(45deg, #27ae60 0%, #2ecc71 100%)',
                 }
               }}
               disabled={loading}

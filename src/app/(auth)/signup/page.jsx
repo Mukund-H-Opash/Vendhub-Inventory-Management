@@ -25,9 +25,8 @@ export default function SignupPage() {
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
 
-    // Local validation
     if (!trimmedEmail || !trimmedPassword) {
-      toast.error("Email and password are required.");
+      toast.error("Email and password fields cannot be empty.");
       return;
     }
 
@@ -37,33 +36,30 @@ export default function SignupPage() {
     }
 
     if (trimmedPassword.length < 6) {
-      toast.error("Password must be at least 6 characters.");
+      toast.error("Password must be at least 6 characters long.");
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
       const { error } = await supabase.auth.signUp({
         email: trimmedEmail,
         password: trimmedPassword,
       });
 
       if (error) {
-        // Handle known errors or fallback
-        if (error.message.includes("User already registered")) {
-          toast.error("This email is already registered.");
-        } else if (error.message.toLowerCase().includes("invalid")) {
-          toast.error("Invalid email or password.");
+        if (error.message.includes('User already registered')) {
+          toast.error('An account with this email already exists.');
         } else {
-          toast.error(`Sign up failed: ${error.message}`);
+          toast.error(error.message);
         }
       } else {
-        toast.success("Account created! Please verify your email.");
+        toast.success("Account created! Check your email for a verification link.");
         router.push("/login");
       }
     } catch (err) {
-      console.error(err);
-      toast.error("Something went wrong. Please try again later.");
+      console.error('Signup error:', err);
+      toast.error("An unexpected error occurred during sign-up.");
     } finally {
       setLoading(false);
     }
@@ -75,22 +71,21 @@ export default function SignupPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(120deg, #f6f7f9 0%, #e3eeff 100%)' // Dashboard background
+      background: 'linear-gradient(120deg, #f6f7f9 0%, #e3eeff 100%)'
     }}>
       <Container component="main" maxWidth="xs">
         <Paper elevation={6} sx={{
-          // mt: 8, // Remove this line
           p: 4,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          borderRadius: 3, // Matching dashboard card radius
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)', // Matching dashboard card background
-          boxShadow: '0 8px 20px rgba(0,0,0,0.1)', // Matching dashboard card shadow
+          borderRadius: 3,
+          background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+          boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
         }}>
           <Typography component="h1" variant="h4" sx={{
             mb: 1,
-            background: 'linear-gradient(45deg, #2c3e50 0%, #3498db 100%)', // Dashboard heading gradient
+            background: 'linear-gradient(45deg, #2c3e50 0%, #3498db 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
@@ -134,9 +129,9 @@ export default function SignupPage() {
                 mt: 3,
                 mb: 2,
                 py: 1.5,
-                background: 'linear-gradient(45deg, #2ecc71 0%, #27ae60 100%)', // Dashboard button gradient
+                background: 'linear-gradient(45deg, #2ecc71 0%, #27ae60 100%)',
                 '&:hover': {
-                  background: 'linear-gradient(45deg, #27ae60 0%, #2ecc71 100%)', // Dashboard button hover effect
+                  background: 'linear-gradient(45deg, #27ae60 0%, #2ecc71 100%)',
                 }
               }}
               disabled={loading}

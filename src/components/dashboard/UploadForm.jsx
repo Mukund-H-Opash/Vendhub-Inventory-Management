@@ -1,25 +1,23 @@
-// src/components/dashboard/UploadForm.jsx
 "use client";
 
 import { useState } from 'react';
-import { Button, Input, Box, CircularProgress, Alert, Typography } from '@mui/material';
+import { Button, Input, Box, CircularProgress } from '@mui/material';
 import { UploadFile } from '@mui/icons-material';
-import { processCsvFile } from '@/app/actions'; 
+import { processCsvFile } from '@/app/actions';
 import toast from 'react-hot-toast';
-import Router from 'next/router';
 
 export default function UploadForm() {
     const [isSubmitting, setSubmitting] = useState(false);
     const [file, setFile] = useState(null);
-    const [error, setError] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
 
     const handleFileChange = (event) => {
         const selectedFile = event.target.files?.[0];
         if (selectedFile) {
+            if (selectedFile.type !== 'text/csv') {
+                toast.error("Invalid file type. Please upload a CSV file.");
+                return;
+            }
             setFile(selectedFile);
-            setError(''); // Clear previous errors/success messages
-            setSuccessMessage('');
         }
     };
 
@@ -31,39 +29,24 @@ export default function UploadForm() {
         }
 
         setSubmitting(true);
-        setError('');
-        setSuccessMessage('');
-
         const formData = new FormData();
         formData.append('csvFile', file);
 
+        const toastId = toast.loading('Processing file...');
+
         try {
             const result = await processCsvFile(formData);
-
-            // --- THIS IS THE UPDATED LOGIC ---
-            if (result?.error) {
-                // Handle a failure response
-                const displayError = result.details ? `${result.error} - ${result.details}` : result.error;
-                toast.error(displayError);
-                setError(displayError);
-            } else {
-                // Handle a success response
-                const successMsg = `Processing complete!`;
-                toast.success(successMsg);
-                setSuccessMessage(successMsg);
-                // Redirect to locations page after successful processing
-                window.location.href = '/dashboard';
-            }
+            toast.success(`Successfully processed ${result.processedRows} rows!`, { id: toastId });
+            // Redirect or refresh
+             window.location.href = '/dashboard';
         } catch (e) {
-            const errorMessage = 'An unexpected error occurred during file processing.';
-            toast.error(errorMessage);
-            setError(errorMessage);
-            console.error(e);
+            console.error('File processing error:', e);
+            toast.error(e.message || 'An unexpected error occurred.', { id: toastId });
+        } finally {
+            setSubmitting(false);
+            setFile(null);
+            event.target.reset(); // Clear the file input
         }
-
-        setSubmitting(false);
-        setFile(null);
-        event.target.reset(); // Clear the file input
     };
 
     return (
@@ -73,9 +56,6 @@ export default function UploadForm() {
                     {file ? file.name : 'Choose CSV File'}
                     <Input type="file" onChange={handleFileChange} sx={{ display: 'none' }} inputProps={{ accept: ".csv" }}/>
                 </Button>
-
-                {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-                {successMessage && <Alert severity="success" sx={{ mt: 2 }}>{successMessage}</Alert>}
 
                 <Button
                     type="submit"

@@ -15,7 +15,7 @@ export async function processCsvFile(formData) {
     const csvFile = formData.get('csvFile');
 
     if (!csvFile || csvFile.size === 0) {
-        return { error: "No file provided." };
+        throw new Error("No file provided or file is empty.");
     }
 
     const fileText = await fileToText(csvFile);
@@ -23,18 +23,18 @@ export async function processCsvFile(formData) {
     // 1. Parse the CSV
     const parseResult = Papa.parse(fileText, { header: true, skipEmptyLines: true });
     if (parseResult.errors.length > 0) {
-        return { error: `CSV Parsing Error: ${parseResult.errors[0].message}` };
+        throw new Error(`CSV Parsing Error: ${parseResult.errors.map(e => e.message).join(', ')}`);
     }
 
     // 2. Normalize the data
     const headerMapping = getHeaderMapping(parseResult.meta.fields);
     if (!headerMapping.site_code || !headerMapping.upc) {
-        return { error: "Could not identify required 'location' and 'product' columns." };
+        throw new Error("Could not identify required 'location' and 'product' columns. Check your CSV headers.");
     }
     const normalizedData = parseResult.data.map(row => normalizeRow(row, headerMapping)).filter(Boolean);
 
     if (normalizedData.length === 0) {
-        return { error: "No valid data rows found to process." };
+        throw new Error("No valid data rows could be processed from the file.");
     }
 
     // 3. Insert the clean, normalized data into the 'products' table
@@ -42,7 +42,7 @@ export async function processCsvFile(formData) {
 
     if (error) {
         console.error("Supabase insert error:", error);
-        return { error: "Failed to save data to the database.", details: error.message };
+        throw new Error(`Database error: ${error.message}`);
     }
 
     // 4. Return the final success result with the number of rows processed
