@@ -4,6 +4,7 @@
 import { createClient } from '@/lib/supabase/server';
 import Papa from 'papaparse';
 import { getHeaderMapping, normalizeRow } from '@/lib/data/normalization';
+import { revalidatePath } from 'next/cache';
 
 // Helper function to convert the file to text
 async function fileToText(file) {
@@ -53,4 +54,58 @@ export async function processCsvFile(formData) {
 
     console.log(`--- Finished: Successfully processed ${normalizedData.length} rows. ---`);
     return { processedRows: normalizedData.length };
+}
+
+
+export async function updateSaleRecord(formData) {
+  const supabase = await createClient();
+
+  // Extract data from formData
+  const id = formData.get('id');
+  const sale_date = formData.get('sale_date');
+  const unit_price = parseFloat(formData.get('unit_price'));
+  const final_total = parseFloat(formData.get('final_total'));
+
+  if (!id) {
+    return { error: 'Record ID is missing.' };
+  }
+
+  const { error } = await supabase
+    .from('products')
+    .update({
+      sale_date,
+      unit_price,
+      final_total,
+    })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Supabase update error:', error);
+    return { error: 'Failed to update record.', details: error.message };
+  }
+
+  revalidatePath(`/dashboard/locations/.*`); 
+  return { success: true };
+}
+
+export async function deleteSaleRecord(id) {
+  const supabase = await createClient();
+
+  if (!id) {
+    return { error: 'Record ID is missing.' };
+  }
+
+  const { error } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Supabase delete error:', error);
+    return { error: 'Failed to delete record.', details: error.message };
+  }
+
+  
+  revalidatePath(`/dashboard/locations/.*`);
+  return { success: true };
 }
