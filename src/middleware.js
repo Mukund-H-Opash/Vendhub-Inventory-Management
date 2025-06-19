@@ -1,55 +1,51 @@
-// middleware.js
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse } from 'next/server'
+// src/middleware.js
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse } from 'next/server';
 
 export async function middleware(request) {
-  let response = NextResponse.next({
+  // This response object is used to set cookies on the outgoing response.
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
-  })
+  });
 
+  // Initialize the Supabase client with the modern, simplified cookie methods.
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
-        get(name) {
-          return request.cookies.get(name)?.value
+        async getAll() {
+          return  await request.cookies.getAll();
         },
-        set(name, value, options) {
-          request.cookies.set({ name, value, ...options })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({ name, value, ...options })
-        },
-        remove(name, options) {
-          request.cookies.set({ name, value: '', ...options })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({ name, value: '', ...options })
+        // The `setAll` method is used to set cookies on both the request and response.
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            response.cookies.set(name, value, options);
+          });
         },
       },
     }
-  )
+  );
 
-  await supabase.auth.getSession()
-
+  // Refresh the user's session token on every request.
   const { data: { session } } = await supabase.auth.getSession();
 
   const { pathname } = request.nextUrl;
 
+  // If a logged-in user tries to access the login or signup page, redirect them to the dashboard.
   if (session && (pathname === '/login' || pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  return response
+  // If a user is not logged in and tries to access a protected route, redirect them to the login page.
+  if (!session && pathname.startsWith('/dashboard')) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  return response;
 }
 
 export const config = {
@@ -62,4 +58,4 @@ export const config = {
      */
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
-}
+};

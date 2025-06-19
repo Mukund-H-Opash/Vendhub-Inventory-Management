@@ -75,7 +75,7 @@ export default async function DashboardPage() {
             </Typography>
           </Box>
           <form action={signOut}>
-            <Button
+            {/* <Button
               variant="contained"
               color="error"
               type="submit"
@@ -88,7 +88,7 @@ export default async function DashboardPage() {
               }}
             >
               Logout
-            </Button>
+            </Button> */}
           </form>
         </Box>
       </Box>
