@@ -49,7 +49,7 @@ export default function ProductSalesTable({ salesData }) {
         <TableBody>
           {salesData.map((sale) => (
             // <Tooltip title={`Transaction ID: ${sale.id}`} key={sale.id} placement="top" arrow>
-              <TableRow hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+              <TableRow hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }} key={sale.id}>
                 <TableCell>{formatDate(sale.sale_date)}</TableCell>
                 <TableCell component="th" scope="row">
                   {sale.product_name} 
