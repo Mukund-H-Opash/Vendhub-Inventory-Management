@@ -1,6 +1,6 @@
 // src/app/(auth)/login/page.jsx
 "use client";
-import { useState } from 'react';
+import { useState, Suspense } from 'react'; // Import Suspense
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import toast from 'react-hot-toast';
@@ -9,7 +9,8 @@ import {
 } from '@mui/material';
 import Link from 'next/link';
 
-export default function LoginPage() {
+
+function LoginForm() {
   const router = useRouter();
   const supabase = createClient();
 
@@ -44,7 +45,6 @@ export default function LoginPage() {
       });
 
       if (error) {
-        // More specific error toasts
         if (error.message.includes('Invalid login credentials')) {
           toast.error('Incorrect email or password. Please try again.');
         } else if (error.message.includes('Email not confirmed')) {
@@ -65,8 +65,7 @@ export default function LoginPage() {
     }
   };
 
-
-   return (
+  return (
     <Box sx={{
       minHeight: '100vh',
       display: 'flex',
@@ -148,5 +147,24 @@ export default function LoginPage() {
         </Paper>
       </Container>
     </Box>
+  );
+}
+
+
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <Box sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <CircularProgress />
+      </Box>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
