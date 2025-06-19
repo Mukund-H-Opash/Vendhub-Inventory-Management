@@ -10,6 +10,8 @@ import {
   Divider,
 } from '@mui/material';
 import ProductSalesTable from '@/components/dashboard/ProductSalesTable'; 
+import Header from "@/components/dashboard/Header"; 
+
 
 export default async function LocationDetailPage(props) {
   
@@ -17,8 +19,23 @@ export default async function LocationDetailPage(props) {
   let sales = [];
   let error = null;
 
+  const {
+      data: { user },
+    } = await supabase.auth.getUser();
+  
+    if (!user) {
+      redirect("/login");
+    }
+  
+    const { data: locations, error: locationsError } = await supabase.rpc(
+      "get_unique_location_site_codes"
+    );
+  
+  
+
   const params = await props.params;
   const siteCode = params.site_code;
+  
 
   try {
     if (!siteCode) {
@@ -42,7 +59,10 @@ export default async function LocationDetailPage(props) {
   }
 
   return (
+    <>
+    <Header user={user} />
     <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: '1200px', mx: 'auto' }}>
+      
       <Box sx={{ mb: 3 }}>
         <Link href="/dashboard" passHref>
           <Button variant="outlined">← Back to All Locations</Button>
@@ -79,5 +99,6 @@ export default async function LocationDetailPage(props) {
         </>
       )}
     </Box>
+    </>
   );
 }
