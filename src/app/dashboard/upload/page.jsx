@@ -1,13 +1,34 @@
 // src/app/dashboard/upload/page.jsx
-'use client';
 
 import { Typography, Box, Paper , Button } from '@mui/material';
 import UploadForm from '@/components/dashboard/UploadForm';
+import Header from "@/components/dashboard/Header"; 
+import { createClient } from "@/lib/supabase/server";
 import Link from 'next/link';
 
 
-export default function UploadPage() {
+
+
+export default async function UploadPage() {
+
+  const supabase = await createClient();
+  
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+  
+    if (!user) {
+      redirect("/login");
+    }
+  
+    const { data: locations, error: locationsError } = await supabase.rpc(
+      "get_unique_location_site_codes"
+    );
+  
+
   return (
+    <>
+    <Header user={user} />
     <Box
 
     
@@ -87,5 +108,6 @@ export default function UploadPage() {
         </Box>
       </Paper>
     </Box>
+    </>
   );
 }
