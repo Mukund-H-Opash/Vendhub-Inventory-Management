@@ -1,73 +1,45 @@
-// src/app/(auth)/signup/page.jsx
-"use client"; // This component must be a client component for state management and toast
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
-import { signUpUser } from '@/app/actions'; // Import the new server action
-
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 import {
-  Container, Box, TextField, Button, Typography, Paper, CircularProgress, Link as MuiLink
+  Container, Box, TextField, Button, Typography, Paper, Link as MuiLink
 } from '@mui/material';
 import Link from 'next/link';
 
 export default function SignupPage() {
-  const router = useRouter();
-  // No need for createClient here since auth logic is in server action
-  // const supabase = createClient();
+  const signUp = async (formData) => {
+    "use server";
+    const email = formData.get('email')?.toString().trim();
+    const password = formData.get('password')?.toString().trim();
+    const supabase = await createClient();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  // This client-side validation is still useful for immediate feedback
-  const validateEmail = (email) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-  const handleSubmit = async (event) => { // Renamed from signUp to handleSubmit for clarity
-    event.preventDefault();
-
-    const trimmedEmail = email.trim();
-    const trimmedPassword = password.trim();
-
-    if (!trimmedEmail || !trimmedPassword) {
-      toast.error("Email and password fields cannot be empty.");
-      return;
+    if (!email || !password) {
+      return { error: "Email and password fields cannot be empty." };
     }
 
-    if (!validateEmail(trimmedEmail)) {
-      toast.error("Please enter a valid email address.");
-      return;
+    // Basic email format validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return { error: "Please enter a valid email address." };
     }
 
-    if (trimmedPassword.length < 6) {
-      toast.error("Password must be at least 6 characters long.");
-      return;
+    if (password.length < 6) {
+      return { error: "Password must be at least 6 characters long." };
     }
 
-    setLoading(true);
-    const formData = new FormData(event.currentTarget); // Create FormData from the form
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
-    try {
-      // Call the server action directly
-      const result = await signUpUser(formData);
-
-      if (result && result.error) { // Check for error property in the returned object
-        if (result.error.includes('User already registered')) {
-          toast.error('An account with this email already exists.');
-        } else {
-          toast.error(result.error);
-        }
+    if (error) {
+      if (error.message.includes('User already registered')) {
+        return { error: 'An account with this email already exists.' };
       } else {
-        toast.success("Account created! Check your email for a verification link.");
-        router.push("/login"); // Client-side redirect after successful signup
+        return { error: error.message };
       }
-    } catch (err) {
-      console.error('Signup error:', err);
-      toast.error("An unexpected error occurred during sign-up.");
-    } finally {
-      setLoading(false);
     }
+
+    // If signup is successful, redirect to the login page
+    redirect("/login");
   };
 
   return (
@@ -99,7 +71,7 @@ export default function SignupPage() {
           <Typography component="h2" variant="h6" color="text.secondary" sx={{ mb: 2 }}>
             Create Account
           </Typography>
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, width: '100%' }}>
+          <Box component="form" action={signUp} sx={{ mt: 1, width: '100%' }}>
             <TextField
               margin="normal"
               required
@@ -109,9 +81,6 @@ export default function SignupPage() {
               name="email"
               autoComplete="email"
               autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
             />
             <TextField
               margin="normal"
@@ -122,9 +91,6 @@ export default function SignupPage() {
               type="password"
               id="password"
               autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
             />
             <Button
               type="submit"
@@ -139,9 +105,8 @@ export default function SignupPage() {
                   background: 'linear-gradient(45deg, #27ae60 0%, #2ecc71 100%)',
                 }
               }}
-              disabled={loading}
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
+              Sign Up
             </Button>
             <Box textAlign="center">
               <MuiLink component={Link} href="/login" variant="body2" sx={{ color: '#3498db' }}>
