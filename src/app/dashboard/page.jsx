@@ -1,5 +1,5 @@
 // src/app/dashboard/page.jsx
-import { createClient } from "@/lib/supabase/server"; // Use the helper
+import { createClient } from "@/lib/supabase/server"; 
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
@@ -29,7 +29,6 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  // --- THIS IS THE FIX ---
   // Call the new database function to get a unique list of site codes
   const { data: locations, error: locationsError } = await supabase.rpc(
     "get_unique_location_site_codes"
@@ -37,10 +36,8 @@ export default async function DashboardPage() {
 
   const signOut = async () => {
     "use server";
-    // FIX: Added 'await' to correctly get the Supabase client
     const supabase = await createClient();
     await supabase.auth.signOut();
-    // After signing out, redirect to the login page
     return redirect("/login");
   };
 
@@ -151,7 +148,6 @@ export default async function DashboardPage() {
           </Toaster>
         )}
 
-        {/* --- LOCATIONS LIST UPDATED --- */}
         {!locationsError && (
           <Box
             sx={{

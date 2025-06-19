@@ -1,6 +1,6 @@
 // src/app/layout.jsx
 import { ThemeProvider } from '@mui/material/styles';
-import theme from '../theme'; // We will create this file next
+import theme from '../theme'; 
 import { Toaster } from 'react-hot-toast';
 
 export const metadata = {

@@ -38,15 +38,10 @@ function parseFlexibleDate(dateString) {
 
 function normalizeRow(row, headerMapping) {
     try {
-        const site_code = row[headerMapping.site_code]; // <-- Use the site_code directly
+        const site_code = row[headerMapping.site_code]; 
         const upc = row[headerMapping.upc];
         
         if (!site_code || !upc) return null;
-
-        // --- THE FIX IS HERE ---
-        // We no longer modify the site_code with .replace()
-        // This ensures codes like '2.0_KIT_03' are preserved correctly.
-
         const product_name = row[headerMapping.product_name] || null;
         const sale_date = parseFlexibleDate(row[headerMapping.sale_date]);
         const unit_price = parseFloat(row[headerMapping.unit_price]) || 0;

@@ -1,4 +1,4 @@
-// src/app/dashboard/loading.jsx
+// src/app/components/loading.jsx
 'use client';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
@@ -11,8 +11,7 @@ export default function Loading() {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: '80vh', // Take up most of the viewport height
-        textAlign: 'center',
+        minHeight: '80vh', 
       }}
     >
       <CircularProgress size={60} sx={{ mb: 2 }} />

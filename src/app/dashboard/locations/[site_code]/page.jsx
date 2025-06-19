@@ -9,31 +9,30 @@ import {
   Box,
   Divider,
 } from '@mui/material';
-// Ensure you have this component created at the path below
 import ProductSalesTable from '@/components/dashboard/ProductSalesTable'; 
 
-export default async function LocationDetailPage({ params }) {
-  // FIX: Added 'await' to correctly initialize the Supabase client.
+export default async function LocationDetailPage(props) {
+  
+  
+
   const supabase = await createClient();
   let sales = [];
   let error = null;
 
-
+  const params = await props.params;
   const siteCode = params.site_code;
 
   try {
     if (!siteCode) {
-      // This error will no longer happen if the folder is named correctly
       throw new Error("Invalid or missing location site code.");
     }
 
-    // We no longer need to fetch from the 'locations' table first.
-    // We can directly query the 'products' table with the site_code.
+  
     const { data: salesData, error: salesError } = await supabase
       .from('products')
-      .select('*') // Select all columns from the sales transaction
+      .select('*') 
       .eq('site_code', siteCode)
-      .order('sale_date', { ascending: false }); // Show most recent sales first
+      .order('sale_date', { ascending: false }); 
 
     if (salesError) {
       throw salesError;

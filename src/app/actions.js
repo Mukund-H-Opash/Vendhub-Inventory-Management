@@ -51,8 +51,6 @@ export async function processCsvFile(formData) {
         return { error: "Failed to save data to the database.", details: error.message };
     }
 
-    // FIX: Return the length of the data array we sent for processing.
-    // The `count` from upsert() can be null, so this is a more reliable way.
     console.log(`--- Finished: Successfully processed ${normalizedData.length} rows. ---`);
     return { processedRows: normalizedData.length };
 }

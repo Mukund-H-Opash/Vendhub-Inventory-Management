@@ -1,3 +1,4 @@
+// src/app/components/dashboard/UploadForm.jsx
 "use client";
 
 import { useState } from 'react';
@@ -37,12 +38,11 @@ export default function UploadForm() {
         try {
             const result = await processCsvFile(formData);
 
-            // FIX: Add a check for errors returned from the server action.
+            
             if (result.error) {
                 toast.error(result.details || result.error, { id: toastId });
             } else {
                 toast.success(`Successfully processed ${result.processedRows} rows!`, { id: toastId });
-                // Redirect or refresh
                  window.location.href = '/dashboard';
             }
         } catch (e) {
@@ -51,7 +51,7 @@ export default function UploadForm() {
         } finally {
             setSubmitting(false);
             setFile(null);
-            event.target.reset(); // Clear the file input
+            event.target.reset(); t
         }
     };
 

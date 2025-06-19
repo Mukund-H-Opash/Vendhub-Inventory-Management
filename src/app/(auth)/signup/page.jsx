@@ -1,3 +1,4 @@
+// src/app/(auth)/signup/page.jsx
 "use client";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
