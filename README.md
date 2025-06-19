@@ -78,8 +78,8 @@ Follow these instructions to get a local copy of the project up and running for 
     * Create a new file named `.env.local` in the root of your project.
     * Add your Supabase credentials to it, as referenced in the Supabase client and server files.
         ```env
-        NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_PROJECT_URL
-        NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+        SUPABASE_URL=YOUR_SUPABASE_PROJECT_URL
+        SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
         ```
 
 5.  **Run the development server:**
@@ -110,6 +110,6 @@ When a file is uploaded via the `UploadForm`, the `processCsvFile` server action
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Before deploying, make sure to set the same environment variables (`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`) in your Vercel project settings.
+Before deploying, make sure to set the same environment variables (`SUPABASE_URL` and `SUPABASE_ANON_KEY`) in your Vercel project settings.
 
 Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
