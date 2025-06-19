@@ -13,7 +13,6 @@ async function fileToText(file) {
 }
 
 export async function processCsvFile(formData) {
-    // FIX: Added 'await' to correctly initialize the Supabase client.
     const supabase = await createClient();
     const csvFile = formData.get('csvFile');
 
@@ -23,14 +22,12 @@ export async function processCsvFile(formData) {
 
     const fileText = await fileToText(csvFile);
 
-    // 1. Parse the CSV data from the file content
     const parseResult = Papa.parse(fileText, { header: true, skipEmptyLines: true });
     if (parseResult.errors.length > 0) {
         console.error("CSV Parsing Errors:", parseResult.errors);
         return { error: `CSV Parsing Error: ${parseResult.errors[0].message}` };
     }
 
-    // 2. Normalize the parsed data
     const headerMapping = getHeaderMapping(parseResult.meta.fields);
     if (!headerMapping.site_code || !headerMapping.upc) {
         return { error: "Could not identify required 'location' and 'product' columns in the CSV." };
@@ -38,16 +35,14 @@ export async function processCsvFile(formData) {
     
     const normalizedData = parseResult.data
       .map(row => normalizeRow(row, headerMapping))
-      .filter(Boolean); // Filter out any null rows from normalization errors
+      .filter(Boolean);
 
     if (normalizedData.length === 0) {
         return { error: "No valid data rows could be processed from the file." };
     }
 
-    // 3. Upsert the data into the 'products' table.
-    // .upsert() will insert new rows or update existing ones based on your table's primary key.
-    // Make sure your 'products' table has a primary key (e.g., on 'upc' and 'site_code').
-    const { count, error } = await supabase
+    // Upsert the data.
+    const { error } = await supabase
         .from('products')
         .upsert(normalizedData);
 
@@ -56,7 +51,8 @@ export async function processCsvFile(formData) {
         return { error: "Failed to save data to the database.", details: error.message };
     }
 
-    // 4. Return the success result with the number of rows processed.
-    console.log(`--- Finished: Successfully processed ${count || 0} rows. ---`);
-    return { processedRows: count || 0 };
+    // FIX: Return the length of the data array we sent for processing.
+    // The `count` from upsert() can be null, so this is a more reliable way.
+    console.log(`--- Finished: Successfully processed ${normalizedData.length} rows. ---`);
+    return { processedRows: normalizedData.length };
 }

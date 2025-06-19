@@ -36,9 +36,15 @@ export default function UploadForm() {
 
         try {
             const result = await processCsvFile(formData);
-            toast.success(`Successfully processed ${result.processedRows} rows!`, { id: toastId });
-            // Redirect or refresh
-             window.location.href = '/dashboard';
+
+            // FIX: Add a check for errors returned from the server action.
+            if (result.error) {
+                toast.error(result.details || result.error, { id: toastId });
+            } else {
+                toast.success(`Successfully processed ${result.processedRows} rows!`, { id: toastId });
+                // Redirect or refresh
+                 window.location.href = '/dashboard';
+            }
         } catch (e) {
             console.error('File processing error:', e);
             toast.error(e.message || 'An unexpected error occurred.', { id: toastId });
