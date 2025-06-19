@@ -50,7 +50,7 @@ export default function SalesTransactionTable({ salesData }) {
         </TableHead>
         <TableBody>
           {salesData.map((sale) => (
-            <Tooltip title={`Transaction ID: ${sale.id}`} key={sale.id} placement="top" arrow>
+            // <Tooltip title={`Transaction ID: ${sale.id}`} key={sale.id} placement="top" arrow>
               <TableRow hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                 <TableCell>{formatDate(sale.sale_date)}</TableCell>
                 <TableCell component="th" scope="row">
@@ -60,7 +60,7 @@ export default function SalesTransactionTable({ salesData }) {
                 <TableCell align="right">{formatCurrency(sale.unit_price)}</TableCell>
                 <TableCell align="right">{formatCurrency(sale.final_total)}</TableCell>
               </TableRow>
-            </Tooltip>
+            // </Tooltip>
           ))}
         </TableBody>
       </Table>
