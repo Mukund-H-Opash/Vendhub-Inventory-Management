@@ -2,6 +2,7 @@
 import { ThemeProvider } from '@mui/material/styles';
 import theme from '../theme'; 
 import { Toaster } from 'react-hot-toast';
+import "@/app/globals.css"
 
 export const metadata = {
   title: "Vendhub Inventory Management",
