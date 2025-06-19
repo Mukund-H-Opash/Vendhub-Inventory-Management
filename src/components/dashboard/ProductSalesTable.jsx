@@ -23,7 +23,7 @@ import {
 } from '@mui/material';
 import { Edit, Delete, Save, Cancel } from '@mui/icons-material';
 import { updateSaleRecord, deleteSaleRecord } from '@/app/actions';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 
 /**
  * A single, stateful row in the sales table that handles its own
