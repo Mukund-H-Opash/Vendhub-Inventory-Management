@@ -4,8 +4,8 @@ import theme from '../theme';
 import { Toaster } from 'react-hot-toast';
 
 export const metadata = {
-  title: "Vending Frontend",
-  description: "Vending Machine Management",
+  title: "Vendhub Inventory Management",
+  description: "Inventory Management",
 };
 
 export default function RootLayout({ children }) {

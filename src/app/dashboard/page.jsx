@@ -64,7 +64,7 @@ export default async function DashboardPage() {
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <DashboardIcon sx={{ color: "#fff", fontSize: 32 }} />
           <Typography variant="h5" fontWeight="bold" sx={{ color: "#fff" }}>
-            Vending Dashboard
+            Dashboard
           </Typography>
         </Box>
         <Box display="flex" alignItems="center" gap={3}>
