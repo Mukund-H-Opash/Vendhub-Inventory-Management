@@ -13,8 +13,6 @@ import ProductSalesTable from '@/components/dashboard/ProductSalesTable';
 
 export default async function LocationDetailPage(props) {
   
-  
-
   const supabase = await createClient();
   let sales = [];
   let error = null;
@@ -26,8 +24,7 @@ export default async function LocationDetailPage(props) {
     if (!siteCode) {
       throw new Error("Invalid or missing location site code.");
     }
-
-  
+    
     const { data: salesData, error: salesError } = await supabase
       .from('products')
       .select('*') 
