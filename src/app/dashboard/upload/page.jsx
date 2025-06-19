@@ -1,23 +1,33 @@
 // src/app/dashboard/upload/page.jsx
 'use client';
 
-import { Typography, Box, Paper } from '@mui/material';
+import { Typography, Box, Paper , Button } from '@mui/material';
 import UploadForm from '@/components/dashboard/UploadForm';
+import Link from 'next/link';
 
 
 export default function UploadPage() {
   return (
     <Box
+
+    
       sx={{
         minHeight: '100vh',
         background: 'linear-gradient(to right, #f5f7fa, #c3cfe2)',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         px: 2,
       }}
     >
-      
+
+      <Box sx={{ mb: 3 ,width: '100%',
+          maxWidth: 800,}}>
+        <Link href="/dashboard" passHref>
+          <Button variant="outlined">← Back to Dashboard </Button>
+        </Link>
+      </Box>
 
       <Paper
         elevation={6}
@@ -56,7 +66,7 @@ export default function UploadPage() {
           }}
         >
           Upload a sales report from Vendor A (iOS Vending) or Vendor B (Cantaloupe Systems). 
-          We'll parse it, calculate sales, and update inventory automatically.
+      update inventory automatically.
         </Typography>
 
         <Box
